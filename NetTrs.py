@@ -7,11 +7,10 @@ import time
 '''
 You only need to modify here
 '''
-IS_SERVER = True  # 是否作为服务器运行
-IS_SEND = False    # 是否发送文件
+IS_SERVER = False  # 是否作为服务器运行
+IS_SEND = True    # 是否发送文件
 Opposite_IP = '127.0.0.1'  # 对方的IP地址
 FILE_PATHS = [r"E:\newwwww\trs_ts"]  # 要发送的目录路径或文件路径
-# FILE_PATHS = [r"F:\YY\自己做的软件\NetCopy\teste2.py", r"F:\YY\自己做的软件\NetCopy\trs_CLI.py"]  # 要发送的目录路径或文件路径
 ########################NOTE########################
 
 
