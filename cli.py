@@ -51,6 +51,7 @@ else:
 def create_socket():
     """创建套接字。"""
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     return s
 
 def connect_socket(s, ip, port):
@@ -164,6 +165,8 @@ def main():
                 connect_socket(s, DST_IP, LISTEN_PORT)
                 send_file(s, file_path)
                 s.close()
+                time.sleep(1)
+                
         #发送结束标志
             s = create_socket()
             connect_socket(s, DST_IP, LISTEN_PORT)
@@ -178,8 +181,9 @@ def main():
                 connect_socket(s, DST_IP, LISTEN_PORT)
                 receive_file(s)
                 if EOF_FLAG == True:
+                    s.close()   
+                    
                     return
-                s.close()   
 
     elif FLAG == 'DST':   #fuwuduan
         if SED_REC == 'R':
@@ -204,8 +208,11 @@ def main():
                 
                 send_file(client_socket, file_path)
                 client_socket.close()
+                s.close()
+                time.sleep(1)
             
             #发送结束标志
+
             s = create_socket()
             bind_socket(s, LISTEN_IP, LISTEN_PORT)
             client_socket, client_address  = s.accept()
