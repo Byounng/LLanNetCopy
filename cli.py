@@ -6,14 +6,14 @@ import argparse
 
 # 解析命令行参数
 parser = argparse.ArgumentParser(description='File transfer script.')
-parser.add_argument('-mode', choices=['server', 'client'],default="server", help='Run mode: server or client.')
-parser.add_argument('-action', choices=['send', 'receive'], default="receive", help='Action: send or receive.')
+parser.add_argument('-mode', choices=['s', 'c'],default="s", help='Run mode: server or client.')
+parser.add_argument('-action', choices=['s', 'r'], default="s", help='Action: send or receive.')
 parser.add_argument('-ip', type=str, help='IP address of the peer (required for client mode).')
 parser.add_argument('-path', type=str, help='File path or directory to send (required for send action).')
 args = parser.parse_args()
 
-IS_SERVER = args.mode == 'server'
-IS_SEND = args.action == 'send'
+IS_SERVER = args.mode == 's'
+IS_SEND = args.action == 's'
 Opposite_IP = args.ip if not IS_SERVER else None
 FILE_PATHS = [args.path] if IS_SEND and args.path else []
 
@@ -155,31 +155,67 @@ def receive_file(s):
     print(f"[+] Transfer rate: {transfer_rate:.2f} MB/s\n")
 
 
+
 def main():
-    if FLAG == 'FROM':
-        for file_path in FILE_PATHS:
+    if FLAG == 'FROM':   #kehuduan
+        if SED_REC == 'S':
+            for file_path in FILE_PATHS:
+                s = create_socket()
+                connect_socket(s, DST_IP, LISTEN_PORT)
+                send_file(s, file_path)
+                s.close()
+        #发送结束标志
             s = create_socket()
             connect_socket(s, DST_IP, LISTEN_PORT)
-            send_file(s, file_path)
+            file_info = f"end:-1".encode('utf-8')
+            file_info_header = f"{len(file_info):<10}".encode('utf-8')
+            s.send(file_info_header + file_info)
             s.close()
-        # 发送结束标志
-        s = create_socket()
-        connect_socket(s, DST_IP, LISTEN_PORT)
-        file_info = f"end:-1".encode('utf-8')
-        file_info_header = f"{len(file_info):<10}".encode('utf-8')
-        s.send(file_info_header + file_info)
-        print('[-] All files sent')
-        
-    elif FLAG == 'DST':
-        s = create_socket()
-        bind_socket(s, LISTEN_IP, LISTEN_PORT)
-        while True:
-            conn, addr = s.accept()
-            print(f"[+] Connection from {addr}")
-            receive_file(conn)
-            conn.close()
-            if EOF_FLAG:
-                return
+            print('[-] All files sent')
+        elif SED_REC == 'R':
+            while True:
+                s = create_socket()
+                connect_socket(s, DST_IP, LISTEN_PORT)
+                receive_file(s)
+                if EOF_FLAG == True:
+                    return
+                s.close()   
+
+    elif FLAG == 'DST':   #fuwuduan
+        if SED_REC == 'R':
+            s = create_socket()
+            bind_socket(s, LISTEN_IP, LISTEN_PORT)
+            while True:
+
+                conn, addr = s.accept()
+                print(f"[+] Connection from {addr}")
+                receive_file(conn)
+                conn.close()
+                if EOF_FLAG == True:
+                    s.close()
+                    return 
+        elif SED_REC == 'S':
+            for file_path in FILE_PATHS:
+                s = create_socket()
+                bind_socket(s, LISTEN_IP, LISTEN_PORT)
+                client_socket, client_address  = s.accept()
+                # print("服务端发送开始log")
+                print(f"[+] Connection from {client_address}")
+                
+                send_file(client_socket, file_path)
+                client_socket.close()
+            
+            #发送结束标志
+            s = create_socket()
+            bind_socket(s, LISTEN_IP, LISTEN_PORT)
+            client_socket, client_address  = s.accept()
+            file_info = f"end:-1".encode('utf-8')
+            file_info_header = f"{len(file_info):<10}".encode('utf-8')
+            client_socket.send(file_info_header + file_info)
+            print('[-] All files sent')
+            client_socket.close()
+            s.close()
+            
             
 if __name__ == "__main__":
     main()

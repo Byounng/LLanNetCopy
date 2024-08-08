@@ -19,19 +19,19 @@
 
 
 作为服务端（接收文件）：
-`python cli.py -mode server`
+`python cli.py -mode s -action r`
 
 
 作为客户端（发送文件）：
-`python cli.py -mode client -action send -ip 192.168.0.1 -path your_path`
+`python cli.py -mode c -action s -ip 192.168.0.1 -path your_path`
 
 
 作为客户端（接收文件）：
-`python cli.py -mode client -ip 192.168.0.1`
+`python cli.py -mode c -action r -ip 192.168.0.1`
 
 
 作为服务端（发送文件）：
-`python cli.py -mode server -action send -path your_path`
+`python cli.py -mode s -action s -path your_path`
 
 
 

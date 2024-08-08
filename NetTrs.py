@@ -152,33 +152,65 @@ def receive_file(s):
 
 
 def main():
-    if FLAG == 'FROM':
-        for file_path in FILE_PATHS:
+    if FLAG == 'FROM':   #kehuduan
+        if SED_REC == 'S':
+            for file_path in FILE_PATHS:
+                s = create_socket()
+                connect_socket(s, DST_IP, LISTEN_PORT)
+                send_file(s, file_path)
+                s.close()
+        #发送结束标志
             s = create_socket()
             connect_socket(s, DST_IP, LISTEN_PORT)
-            send_file(s, file_path)
+            file_info = f"end:-1".encode('utf-8')
+            file_info_header = f"{len(file_info):<10}".encode('utf-8')
+            s.send(file_info_header + file_info)
             s.close()
-      #发送结束标志
-        s = create_socket()
-        connect_socket(s, DST_IP, LISTEN_PORT)
-        file_info = f"end:-1".encode('utf-8')
-        file_info_header = f"{len(file_info):<10}".encode('utf-8')
-        s.send(file_info_header + file_info)
-        print('[-] All files sent')
-        
-    elif FLAG == 'DST':
-        s = create_socket()
-        bind_socket(s, LISTEN_IP, LISTEN_PORT)
-        while True:
+            print('[-] All files sent')
+        elif SED_REC == 'R':
+            while True:
+                s = create_socket()
+                connect_socket(s, DST_IP, LISTEN_PORT)
+                receive_file(s)
+                if EOF_FLAG == True:
+                    return
+                s.close()   
 
-            conn, addr = s.accept()
-            print(f"[+] Connection from {addr}")
-            receive_file(conn)
-            conn.close()
-            if EOF_FLAG == True:
-                  return 
+    elif FLAG == 'DST':   #fuwuduan
+        if SED_REC == 'R':
+            s = create_socket()
+            bind_socket(s, LISTEN_IP, LISTEN_PORT)
+            while True:
+
+                conn, addr = s.accept()
+                print(f"[+] Connection from {addr}")
+                receive_file(conn)
+                conn.close()
+                if EOF_FLAG == True:
+                    s.close()
+                    return 
+        elif SED_REC == 'S':
+            for file_path in FILE_PATHS:
+                s = create_socket()
+                bind_socket(s, LISTEN_IP, LISTEN_PORT)
+                client_socket, client_address  = s.accept()
+                # print("服务端发送开始log")
+                print(f"[+] Connection from {client_address}")
+                
+                send_file(client_socket, file_path)
+                client_socket.close()
             
-            
+            #发送结束标志
+            s = create_socket()
+            bind_socket(s, LISTEN_IP, LISTEN_PORT)
+            client_socket, client_address  = s.accept()
+            file_info = f"end:-1".encode('utf-8')
+            file_info_header = f"{len(file_info):<10}".encode('utf-8')
+            client_socket.send(file_info_header + file_info)
+            print('[-] All files sent')
+            client_socket.close()
+            s.close()
+
 
 if __name__ == "__main__":
     main()
